@@ -1,0 +1,21 @@
+{
+    "files.exclude": {
+        "**/.*": true,
+        "__tests__": true,
+        "doc": true,
+        "test": true,
+        "env": true,
+        "ios": true,
+        "node_modules": true,
+        "target": true,
+        "**/*-lock.*": true,
+        "**/*.js": true,
+        "**/*.log": true,
+
+        "**/.git": true,
+        "**/.svn": true,
+        "**/.hg": true,
+        "**/CVS": true,
+        "**/.DS_Store": true
+    }
+}
