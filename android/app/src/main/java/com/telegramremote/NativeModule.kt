@@ -40,9 +40,9 @@ class NativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
     }
 
     @ReactMethod
-    fun restartListener(token: String, pincode: String) {
+    fun restartListener(token: String) {
         prefs.edit().putString("token", token).apply()
-        TelegramLister.reset(prefs, token, pincode, reactApplicationContext)
+        TelegramLister.reset(prefs, reactApplicationContext)
     }
 
     @ReactMethod
@@ -72,7 +72,7 @@ class NativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
 
     @ReactMethod
     fun openSettings() {
-        reactApplicationContext.startActivity(
+        currentActivity!!.startActivity(
             Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
     }
 

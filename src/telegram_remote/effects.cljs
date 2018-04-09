@@ -5,6 +5,7 @@
    [telegram-remote.domain :as domain]))
 
 (def ReactNative (js/require "react-native"))
+(def async-storage (.-AsyncStorage ReactNative))
 (def android (.-Android (.-NativeModules ReactNative)))
 (defn alert [title]
   (.alert (.-Alert ReactNative) "TelegramRemote" title))
@@ -18,9 +19,22 @@
 
 (reg-fx :initialize-app-fx
         (fn []
-          (.getState
-           android
-           #(dispatch [:update-db {:token (.-token %)}]))
+          ; (.setItem as "k" (.stringify js/JSON (clj->js x)))
+          ; (.then (.getItem as "k") (fn [y] (println (js->clj y))))
+
+          ; (.then (.getItem as "k") (fn [y] (println (.parse js/JSON y))))
+
+          ; (.then (.getItem as "k") (fn [x] (->> x (.parse js/JSON) (js->clj) (println))))
+
+          ; (->> {:a "bb"} (clj->js) (.stringify js/JSON) (.parse js/JSON) (js->clj))
+
+          (.then
+           (.getItem async-storage "token")
+           (fn [token]
+             (dispatch [:db (assoc db :token token)])))
+          ; (.getState
+          ;  android
+          ;  #(dispatch [:update-db {:token (.-token %)}]))
           (.getAndroidId
            android
            #(dispatch [:update-db {:pincode (domain/toPincode %)}]))
@@ -40,7 +54,7 @@
 
 (reg-fx :validate-connection-fx
         (fn [db]
-          (.restartListener android (:temp-token db) (:pincode db))
+          (.restartListener android (:temp-token db))
           (dispatch [:update-db {:token (:temp-token db) :temp-token ""}])))
 
 (reg-event-db :test-set-isbusy (fn [db _] (assoc db :isBusy true)))

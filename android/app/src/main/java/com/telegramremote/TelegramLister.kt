@@ -22,8 +22,7 @@ object TelegramLister {
         job = null
     }
 
-    fun reset(prefs: SharedPreferences, token: String, pincode: String, context: Context) {
-        prefs.edit().putString("token", token).putString("pincode", pincode).apply()
+    fun reset(prefs: SharedPreferences, context: Context) {
         if (job != null) restart(prefs, context)
     }
 
@@ -56,15 +55,5 @@ object TelegramLister {
             update.message().from().id().toString(),
             update.message().text(),
             prefs.getStringSet("ids", emptySet()))
-
-//        if (prefs.contains(id)) return
-//
-//        if (isValidPinCode(update.message().text(), pincode)) {
-//            val ids = prefs.getStringSet("ids", emptySet())
-//            prefs.edit().putStringSet("ids", ids + id).apply()
-//            bot.execute(SendMessage(id, "Вы успешно подключили телефон"))
-//        } else {
-//            bot.execute(SendMessage(id, "Что бы подключить телефон, введит пинкод (4 цифры)"))
-//        }
     }
 }
