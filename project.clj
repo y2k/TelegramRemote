@@ -6,9 +6,12 @@
             :dependencies [[org.clojure/clojure "1.9.0"]
                            [org.clojure/clojurescript "1.9.946"]
                            [reagent "0.7.0" :exclusions [cljsjs/react cljsjs/react-dom cljsjs/react-dom-server cljsjs/create-react-class]]
-[re-frame "0.10.4"]]
+                           [re-frame "0.10.4"]
+                           [org.clojure/tools.nrepl "0.2.12"]
+                           [cljfmt "0.5.7"]]
             :plugins [[lein-cljsbuild "1.1.4"]
-                      [lein-figwheel "0.5.14"]]
+                      [lein-figwheel "0.5.14"]
+                      [cider/cider-nrepl "0.15.1"]]
             :clean-targets ["target/" "index.ios.js" "index.android.js" #_($PLATFORM_CLEAN$)]
             :aliases {"prod-build" ^{:doc "Recompile code with prod profile."}
                                    ["do" "clean"

@@ -1,7 +1,7 @@
 (ns telegram-remote.android.core
   (:require [reagent.core :as r :refer [atom]]
             [re-frame.core :refer [subscribe dispatch dispatch-sync]]
-            [telegram-remote.effects]))
+            [telegram-remote.effects :as effects]))
 
 (def ReactNative (js/require "react-native"))
 (def app-registry (.-AppRegistry ReactNative))
@@ -24,7 +24,7 @@
                    :background-color "#2bbafd"}} title]]])
 
 (defn app-root []
-  (let [db (subscribe [:get-db])]
+  (let [db (subscribe [:main-page])]
     (fn []
       [view {:style {:background-color "#192431" :flex 1}}
        [text {:style {:background-color "#243445" :textAlignVertical "center"
@@ -46,18 +46,18 @@
         [text {:style {:color "white" :margin-vertical 8}} "Создать бота"]
         [button "Открыть telegram" #(dispatch [:open-telegram])]
 
-        [text {:style {:color "white" :margin-vertical 8}} "Ведите Access-Token"]
+        [text {:style {:color "white" :margin-vertical 8}} "Введите Access-Token"]
         [text-input {:placeholder (or (not-empty (:token @db)) "Access-Token бота")
                      :placeholderTextColor "#aaa" :underlineColorAndroid "white"
                      :style {:color "white"}
                      :on-change-text (fn [x] (dispatch [:update-db {:temp-token x}]))}
          (:temp-token @db)]
 
-        [button "Применить" #(dispatch [:validate-connection db])]]])))
+        [button "Сохранить" (fn [] dispatch [:validate-connection @db])]]])))
 
 (defn init []
   (dispatch-sync [:initialize-db])
-  (dispatch [:initialize-app])
+  (effects/load-external-state)
   (.registerComponent app-registry "TelegramRemote" #(r/reactify-component app-root)))
 
 (.registerHeadlessTask app-registry "ClojureApp"

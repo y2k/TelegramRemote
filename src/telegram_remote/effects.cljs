@@ -7,72 +7,23 @@
 (def ReactNative (js/require "react-native"))
 (def async-storage (.-AsyncStorage ReactNative))
 (def android (.-Android (.-NativeModules ReactNative)))
-(defn alert [title]
-  (.alert (.-Alert ReactNative) "TelegramRemote" title))
 
-(.addEventListener (.-AppState ReactNative) "change" #(dispatch [:initialize-app]))
+; (.addEventListener (.-AppState ReactNative) "change" #(dispatch [:initialize-app]))
+; (defn alert [title] (.alert (.-Alert ReactNative) "TelegramRemote" title))
 
-; Effects
+;; Events
 
-(reg-event-fx :initialize-app
-              (fn [] {:initialize-app-fx nil}))
+(reg-event-fx :initialize-app (fn [] {:initialize-app-fx nil}))
 
-(reg-fx :initialize-app-fx
-        (fn []
-          ; (.setItem as "k" (.stringify js/JSON (clj->js x)))
-          ; (.then (.getItem as "k") (fn [y] (println (js->clj y))))
-
-          ; (.then (.getItem as "k") (fn [y] (println (.parse js/JSON y))))
-
-          ; (.then (.getItem as "k") (fn [x] (->> x (.parse js/JSON) (js->clj) (println))))
-
-          ; (->> {:a "bb"} (clj->js) (.stringify js/JSON) (.parse js/JSON) (js->clj))
-
-          (.then
-           (.getItem async-storage "token")
-           (fn [token]
-             (dispatch [:db (assoc db :token token)])))
-          ; (.getState
-          ;  android
-          ;  #(dispatch [:update-db {:token (.-token %)}]))
-          (.getAndroidId
-           android
-           #(dispatch [:update-db {:pincode (domain/toPincode %)}]))
-          (.getNotificationListeners
-           android
-           #(dispatch [:update-db {:is-listen-notifications (domain/checkIsListenNotifications %)}]))))
-
-(reg-event-fx :open-settings (fn [_] {:open-settings-fx nil}))
-
-(reg-fx :open-settings-fx #(.openSettings android))
-
-(reg-event-fx :open-telegram (fn [_] {:open-url-fx "https://t.me/BotFather"}))
-
-(reg-fx :open-url-fx #(.openURL (.-Linking (js/require "react-native")) %))
+(reg-event-fx :open-settings (fn [_] {:open-intent "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"}))
+(reg-event-fx :open-telegram (fn [_] {:open-intent "https://t.me/BotFather"}))
 
 (reg-event-fx :validate-connection (fn [_ [_ db]] {:validate-connection-fx db}))
 
-(reg-fx :validate-connection-fx
-        (fn [db]
-          (.restartListener android (:temp-token db))
-          (dispatch [:update-db {:token (:temp-token db) :temp-token ""}])))
-
-(reg-event-db :test-set-isbusy (fn [db _] (assoc db :isBusy true)))
-
 (reg-event-fx
  :send-to-telegram
- (fn [cfx [event data]]
-   (.log js/console (str "Coeffect = " cfx))
-   (.log js/console (str "Event = " event))
-   (.log js/console (str "Data = " data))
+ (fn [cfx [_ data]]
    {:send-to-telegram-fx data}))
-
-(reg-fx
- :send-to-telegram-fx
- (fn [{user-id :user-id message :message}]
-   (.sendToTelegram android user-id message)))
-
-(reg-fx :sync-user-ids #(.saveUserIds android (clj->js %)))
 
 (reg-event-fx
  :handle-telegram-msg
@@ -82,3 +33,55 @@
      {:send-to-telegram-fx {:user-id user-id :message message}
       :db (assoc db :connected-ids newIds)
       :sync-user-ids newIds})))
+
+;; Effects
+
+; (reg-fx :platform
+;         (fn [{method :method args :args}]
+;           (js-invoke android method args)))
+
+(reg-fx :open-intent
+        (fn [url]
+          (if (= url "android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS")
+            (.openSettings android)
+            (.openURL (.-Linking (js/require "react-native")) url))))
+
+(defn load-external-state []
+  (.getEnvironment
+   android
+   #(dispatch [:update-db {:secure-id (.-secure-id %)
+                           :notification-listeners (.-notification-listeners %)}])))
+
+; (reg-fx :initialize-app-fx
+;         (fn []
+;           ; (.setItem as "k" (.stringify js/JSON (clj->js x)))
+;           ; (.then (.getItem as "k") (fn [y] (println (js->clj y))))
+;           ; (.then (.getItem as "k") (fn [y] (println (.parse js/JSON y))))
+;           ; (.then (.getItem as "k") (fn [x] (->> x (.parse js/JSON) (js->clj) (println))))
+;           ; (->> {:a "bb"} (clj->js) (.stringify js/JSON) (.parse js/JSON) (js->clj))
+
+;           (.then
+;            (.getItem async-storage "token")
+;            (fn [token]
+;              (dispatch [:db (assoc db :token token)])))
+;           ; (.getState
+;           ;  android
+;           ;  #(dispatch [:update-db {:token (.-token %)}]))
+;           (.getAndroidId
+;            android
+;            #(dispatch [:update-db {:pincode (domain/toPincode %)}]))
+;           (.getNotificationListeners
+;            android
+;            #(dispatch [:update-db {:is-listen-notifications (domain/checkIsListenNotifications %)}]))))
+
+(reg-fx :validate-connection-fx
+        (fn [db]
+          (.restartListener android (:temp-token db))
+          (dispatch [:update-db {:token (:temp-token db) :temp-token ""}])))
+
+(reg-fx
+ :send-to-telegram-fx
+ (fn [{user-id :user-id message :message}]
+   (.sendToTelegram android user-id message)))
+
+(reg-fx :sync-user-ids #(.saveUserIds android (clj->js %)))

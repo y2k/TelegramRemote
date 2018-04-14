@@ -6,7 +6,6 @@ import android.provider.Settings
 import android.service.notification.NotificationListenerService
 import android.service.notification.StatusBarNotification
 import android.util.Log
-import android.widget.Toast
 import com.facebook.react.bridge.*
 import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.request.SendMessage
@@ -19,12 +18,44 @@ class NativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
 
     private val prefs = reactApplicationContext.getSharedPreferences("users", 0)
 
+    @SuppressLint("HardwareIds")
     @ReactMethod
-    fun loadUserIds(callback: Callback) {
+    fun getEnvironment(callback: Callback) {
+        val secureId = Settings.Secure.getString(
+            reactApplicationContext.contentResolver, Settings.Secure.ANDROID_ID)
+
+        val listeners = Settings.Secure.getString(
+            reactApplicationContext.contentResolver, "enabled_notification_listeners")
+
+        val token = prefs.getString("token", "")
+
         val ids = prefs.getStringSet("ids", emptySet())
-            .toList().let(Arguments::fromList)
-        callback.invoke(ids)
+                       .toList()
+                       .let(Arguments::fromList)
+
+        val env = Arguments.createMap()
+        env.putString("secure_id", secureId)
+        env.putString("notification_listeners", listeners ?: "")
+        env.putString("token", token)
+        env.putString("ids", ids)
+
+        callback(env)
     }
+
+    @ReactMethod
+    fun updateToken(token: String) {
+        prefs.edit().putString("token", token).apply()
+        TelegramLister.reset(prefs, reactApplicationContext)
+    }
+
+    // === === === === === === === === === === === === === ===
+
+    // @ReactMethod
+    // fun loadUserIds(callback: Callback) {
+    //     val ids = prefs.getStringSet("ids", emptySet())
+    //         .toList().let(Arguments::fromList)
+    //     callback.invoke(ids)
+    // }
 
     @ReactMethod
     fun saveUserIds(ids: ReadableArray) {
@@ -39,36 +70,36 @@ class NativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
         TelegramBot(token).execute(SendMessage(userId, message))
     }
 
-    @ReactMethod
-    fun restartListener(token: String) {
-        prefs.edit().putString("token", token).apply()
-        TelegramLister.reset(prefs, reactApplicationContext)
-    }
+    // @ReactMethod
+    // fun restartListener(token: String) {
+    //     prefs.edit().putString("token", token).apply()
+    //     TelegramLister.reset(prefs, reactApplicationContext)
+    // }
 
-    @ReactMethod
-    fun getState(callback: Callback) {
-        val token = prefs.getString("token", "")
+    // @ReactMethod
+    // fun getState(callback: Callback) {
+    //     val token = prefs.getString("token", "")
 
-        callback(
-            Arguments.createMap().apply {
-                putString("token", token)
-            })
-    }
+    //     callback(
+    //         Arguments.createMap().apply {
+    //             putString("token", token)
+    //         })
+    // }
 
-    @SuppressLint("HardwareIds")
-    @ReactMethod
-    fun getAndroidId(callback: Callback) {
-        val secureId = Settings.Secure.getString(
-            reactApplicationContext.contentResolver, Settings.Secure.ANDROID_ID)
-        callback(secureId)
-    }
+//    @SuppressLint("HardwareIds")
+//    @ReactMethod
+//    fun getAndroidId(callback: Callback) {
+//        val secureId = Settings.Secure.getString(
+//            reactApplicationContext.contentResolver, Settings.Secure.ANDROID_ID)
+//        callback(secureId)
+//    }
 
-    @ReactMethod
-    fun getNotificationListeners(callback: Callback) {
-        val listeners = Settings.Secure.getString(
-            reactApplicationContext.contentResolver, "enabled_notification_listeners")
-        callback(listeners)
-    }
+//    @ReactMethod
+//    fun getNotificationListeners(callback: Callback) {
+//        val listeners = Settings.Secure.getString(
+//            reactApplicationContext.contentResolver, "enabled_notification_listeners")
+//        callback(listeners)
+//    }
 
     @ReactMethod
     fun openSettings() {
@@ -76,9 +107,9 @@ class NativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
             Intent("android.settings.ACTION_NOTIFICATION_LISTENER_SETTINGS"))
     }
 
-    @ReactMethod
-    fun toast(message: String) =
-        Toast.makeText(reactApplicationContext, message, Toast.LENGTH_LONG).show()
+    // @ReactMethod
+    // fun toast(message: String) =
+    //     Toast.makeText(reactApplicationContext, message, Toast.LENGTH_LONG).show()
 
     override fun getName(): String = "Android"
 }
