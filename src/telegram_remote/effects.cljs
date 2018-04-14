@@ -2,11 +2,12 @@
   (:require
    [re-frame.core :refer [reg-event-db reg-event-fx reg-fx dispatch]]
    [telegram-remote.db :as db :refer [app-db]]
-   [telegram-remote.domain :as domain]))
+   [telegram-remote.domain :as domain]
+   [telegram-remote.storage :as storage]))
 
-(def ReactNative (js/require "react-native"))
-(def async-storage (.-AsyncStorage ReactNative))
-(def android (.-Android (.-NativeModules ReactNative)))
+(def react-native (js/require "react-native"))
+(def async-storage (.-AsyncStorage react-native))
+(def android (.-Android (.-NativeModules react-native)))
 
 ; (.addEventListener (.-AppState ReactNative) "change" #(dispatch [:initialize-app]))
 ; (defn alert [title] (.alert (.-Alert ReactNative) "TelegramRemote" title))
@@ -50,7 +51,8 @@
   (.getEnvironment
    android
    #(dispatch [:update-db {:secure-id (.-secure-id %)
-                           :notification-listeners (.-notification-listeners %)}])))
+                           :notification-listeners (.-notification-listeners %)}]))
+  (storage/load #(dispatch [:update-db %])))
 
 ; (reg-fx :initialize-app-fx
 ;         (fn []

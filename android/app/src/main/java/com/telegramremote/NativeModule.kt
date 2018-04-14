@@ -37,7 +37,7 @@ class NativeModule(reactContext: ReactApplicationContext) : ReactContextBaseJava
         env.putString("secure_id", secureId)
         env.putString("notification_listeners", listeners ?: "")
         env.putString("token", token)
-        env.putString("ids", ids)
+        env.putArray("ids", ids)
 
         callback(env)
     }
