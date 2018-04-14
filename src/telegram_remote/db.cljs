@@ -7,10 +7,11 @@
 (def app-db {:secure-id ""
              :notification-listeners ""
 
-             :connected-ids #{}
+             :connected-id ""
              :token ""
              :temp-token ""
 
+             :connected-ids #{}
              :is-listen-notifications false
              :pincode "0000"})
 
